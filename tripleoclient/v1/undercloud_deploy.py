@@ -113,6 +113,15 @@ class DeployUndercloud(command.Command):
             print('Installing prerequisites ...')
             subprocess.check_call(['yum', '-y', 'install'] + processed)
 
+    def _configure_puppet(self):
+        print('Configuring puppet modules symlinks ...')
+        src = '/usr/share/openstack-puppet/modules/'
+        dst = '/etc/puppet/modules/'
+        subprocess.check_call(['mkdir', '-p', dst])
+        for obj in os.listdir(src):
+            os.symlink(os.path.abspath(obj),
+                       os.path.join(dst, obj))
+
     def _lookup_tripleo_server_stackid(self, client, stack_id):
         server_stack_id = None
 
@@ -512,8 +521,9 @@ class DeployUndercloud(command.Command):
         if os.geteuid() != 0:
             raise exceptions.DeploymentError("Please run as root.")
 
-        # Install required packages
+        # Install required packages and configure puppet
         self._install_prerequisites(parsed_args.heat_native)
+        self._configure_puppet()
 
         keystone_pid = self._fork_fake_keystone()
 
