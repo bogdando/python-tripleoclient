@@ -161,6 +161,85 @@ class TestContainerImagePrepare(TestPluginV1):
 
     @mock.patch('tripleo_common.image.kolla_builder.'
                 'container_images_prepare_defaults', create=True)
+    @mock.patch('heatclient.common.template_utils.'
+                'process_multiple_environments_and_files')
+    @mock.patch('requests.get')
+    def test_container_image_prepare_legacy(self, mock_get, pmef, mock_cipd):
+
+        temp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, temp)
+        images_file = os.path.join(temp, 'overcloud_containers.yaml')
+        env_file = os.path.join(temp, 'containers_env.yaml')
+        tmpl_file = os.path.join(temp, 'overcloud_containers.yaml.j2')
+        legacy_service_file = os.path.join(temp, 'puppet', 'services',
+                                           'legacy-svc.yaml')
+        legacy_service_env_file = os.path.join(temp, 'legacy-svc.yaml')
+        legacy_service_env_yaml = {'resource_registry': {
+            'OS::TripleO::Services1::LegacySvc' : legacy_service_file
+        }}
+        with open(legacy_service_env_file, 'w') as f:
+            yaml.dump(legacy_service_env_yaml, f, default_flow_style=False)
+        roles_file = os.path.join(temp, 'roles_data.yaml')
+        with open(roles_file, 'w') as f:
+            f.write(self.roles_yaml)
+        mock_get.side_effect = requests.exceptions.SSLError('ouch')
+
+        pmef.return_value = None, legacy_service_env_yaml
+
+        arglist = [
+            '--template-file',
+            tmpl_file,
+            '--tag',
+            'passed-ci',
+            '--namespace',
+            '192.0.2.0:8787/t',
+            '--prefix',
+            'os-',
+            '--suffix',
+            'foo',
+            '--output-images-file',
+            images_file,
+            '--output-env-file',
+            env_file,
+            '--set',
+            'ceph_namespace=myceph',
+            '--set',
+            'ceph_image=mydaemon',
+            '--set',
+            'ceph_tag=mytag',
+            '-e',
+            'environment/docker.yaml',
+            '-e',
+            legacy_service_env_file,
+            '--roles-file',
+            roles_file
+        ]
+        self.cmd.app.command_options = arglist
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.cmd.take_action(parsed_args)
+
+        pmef.assert_called_once_with(['environment/docker.yaml',
+                                     legacy_service_env_file],
+                                     env_path_is_object=mock.ANY,
+                                     object_request=mock.ANY)
+        ci_data = {
+            'container_images': [{
+                'imagename': '192.0.2.0:8787/t/os-legacy-svcfoo:passed-ci',
+            }]
+        }
+        env_data = {
+            'parameter_defaults': {
+                'DockerLegacySvcImage':
+                    '192.0.2.0:8787/t/os-legacy-svcfoo:passed-ci',
+                'DockerInsecureRegistryAddress': ['192.0.2.0:8787']
+            }
+        }
+        with open(images_file) as f:
+            self.assertEqual(ci_data, yaml.safe_load(f))
+        with open(env_file) as f:
+            self.assertEqual(env_data, yaml.safe_load(f))
+
     @mock.patch('tripleo_common.image.kolla_builder.'
                 'container_images_prepare', create=True)
     @mock.patch('heatclient.common.template_utils.'
