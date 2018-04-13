@@ -19,11 +19,16 @@ import netifaces
 import os
 import subprocess
 import sys
+import yaml
+
+from osc_lib.i18n import _
 
 from oslo_utils import netutils
 import psutil
 
 from oslo_config import cfg
+
+from string import replace
 
 from tripleoclient import constants
 
@@ -362,6 +367,45 @@ def _validate_passwords_file():
         raise FailedValidation(message)
 
 
+def _validate_env_files_paths():
+    """Verify the non-matching templates path vs env files paths"""
+    tht_path = CONF.get('templates', constants.TRIPLEO_HEAT_TEMPLATES)
+    roles_file = CONF.get('roles_file', constants.UNDERCLOUD_ROLES_FILE)
+
+    # get the list of jinja templates normally rendered for UC installations
+    self.log.debug("Using roles file %s from %s" % (roles_file, tht_path))
+    process_templates = os.path.join(tht_path,
+                                     'tools/process-templates.py')
+    args = ['python', process_templates, '--roles-data',
+            roles_file, '--dry-run']
+    p = subprocess.Popen(args, cwd=tht_path, stdout=subprocess.PIPE)
+
+    # parse the list for the rendered from j2 file names
+    result = p.communicate()[0]
+    j2_files_list = []
+    for line in result.split("\n"):
+        if ((line.startswith('dry run') or line.startswith('jinja2')) and
+           line.endswith('.yaml')):
+            bname = os.path.basename(line.split(' ')[-1])
+            if line.startswith('dry run'):
+                j2_files_list.append(bname)
+            if line.startswith('jinja2'):
+                j2_files_list.append(replace(bname, '.j2', ''))
+
+    # prohibit external env files with the names matching that list entries
+    for env_file in CONF['custom_env_files']:
+        if (os.path.dirname(os.path.abspath(env_file)) !=
+           os.path.abspath(tht_path)):
+            env_file_bname = os.path.basename(env_file)
+            if env_file_bname in j2_files_list:
+                msg = _("External to %s heat environment files "
+                        "can not reference j2 processed files, like %s ") %
+                        os.path.abspath(tht_path) +
+                        os.path.abspath(env_file)
+                LOG.error(msg)
+                raise FailedValidation(msg)
+
+
 def _run_yum_clean_all(instack_env):
     args = ['sudo', 'yum', 'clean', 'all']
     LOG.info('Running yum clean all')
@@ -385,6 +429,9 @@ def check():
         _check_memory()
         _check_sysctl()
         _validate_passwords_file()
+        # Heat templates validations
+        if CONF.get('custom_env_files'):
+            _validate_env_files_paths()
         # Networking validations
         _validate_value_formats()
         for subnet in CONF.subnets:
