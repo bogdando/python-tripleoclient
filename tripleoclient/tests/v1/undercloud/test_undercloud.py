@@ -60,6 +60,7 @@ class TestUndercloudInstall(TestPluginV1):
     def test_undercloud_install_with_heat_custom_output(self, mock_subprocess,
                                                         mock_wr, mock_os):
         self.conf.config(output_dir='/foo')
+        self.conf.config(roles_file='foo/roles.yaml')
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -73,6 +74,7 @@ class TestUndercloudInstall(TestPluginV1):
              'deploy', '--local-domain=localdomain',
              '--local-ip=192.168.24.1/24',
              '--templates=/usr/share/openstack-tripleo-heat-templates/',
+             '--roles-file=foo/roles.yaml',
              '--heat-native', '-e', '/home/stack/foo.yaml', '-e',
              '/usr/share/openstack-tripleo-heat-templates/environments/'
              'services/ironic.yaml',
