@@ -60,6 +60,10 @@ class TestUndercloudInstall(TestPluginV1):
     def test_undercloud_install_with_heat_custom_output(self, mock_subprocess,
                                                         mock_wr, mock_os):
         self.conf.config(output_dir='/foo')
+        # TODO(bogdando): add unit test against expected template contents
+        # ending up processed in undercloud_parameters.yaml's
+        # UndercloudNetConfigOverride JSON dict
+        self.conf.config(net_config_override='/foo/net-config.json')
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
