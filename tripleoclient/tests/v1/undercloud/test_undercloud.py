@@ -60,6 +60,7 @@ class TestUndercloudInstall(TestPluginV1):
     def test_undercloud_install_with_heat_custom_output(self, mock_subprocess,
                                                         mock_wr, mock_os):
         self.conf.config(output_dir='/foo')
+        self.conf.config(net_config_override='/foo/net-config.json')
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -103,7 +104,8 @@ class TestUndercloudInstall(TestPluginV1):
              'config-download-environment.yaml', '-e',
              '/usr/share/openstack-tripleo-heat-templates/environments/'
              'undercloud.yaml', '--output-dir=/foo',
-             '-e', '/foo/undercloud_parameters.yaml'])
+             '-e', '/foo/undercloud_parameters.yaml',
+             '-e', '/foo/net-config.json'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)

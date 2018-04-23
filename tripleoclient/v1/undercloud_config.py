@@ -33,6 +33,33 @@ from tripleoclient import utils
 
 from tripleoclient.v1 import undercloud_preflight
 
+NETCONFIG_TAGS_EXAMPLE = """
+"network_config": [
+ {
+  "type": "ovs_bridge",
+  "name": "br-ctlplane",
+  "ovs_extra": [
+   "br-set-external-id br-ctlplane bridge-id br-ctlplane"
+  ],
+  "members": [
+   {
+    "type": "interface",
+    "name": "{{LOCAL_INTERFACE}}",
+    "primary": "true",
+    "mtu": {{LOCAL_MTU}},
+    "dns_servers": {{UNDERCLOUD_NAMESERVERS}}
+   }
+  ],
+  "addresses": [
+    {
+      "ip_netmask": "{{PUBLIC_INTERFACE_IP}}"
+    }
+  ],
+  "routes": {{SUBNETS_STATIC_ROUTES}},
+  "mtu": {{LOCAL_MTU}}
+}
+]
+"""
 
 PARAMETER_MAPPING = {
     'inspection_interface': 'IronicInspectorInterface',
@@ -235,10 +262,8 @@ _opts = [
                help=('Path to network config override template. If set, this '
                      'template will be used to configure the networking via '
                      'os-net-config. Must be in json format. '
-                     'Templated tags can be used within the '
-                     'template, see '
-                     'instack-undercloud/elements/undercloud-stack-config/'
-                     'net-config.json.template for example tags')
+                     'Templated j2 tags can be used within the '
+                     'template, for example:\n%s ') % NETCONFIG_TAGS_EXAMPLE
                ),
     cfg.StrOpt('inspection_interface',
                default='br-ctlplane',
@@ -816,6 +841,10 @@ def prepare_undercloud_deploy(upgrade=False, no_validations=False,
     if CONF.get('custom_env_files'):
         for custom_file in CONF['custom_env_files']:
             deploy_args += ['-e', custom_file]
+
+    if CONF.get('net_config_override'):
+        params_file = os.path.abspath(CONF['net_config_override'])
+        deploy_args += ['-e', params_file]
 
     if CONF.get('enable_validations') and not no_validations:
         undercloud_preflight.check()
