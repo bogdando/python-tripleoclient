@@ -163,9 +163,9 @@ class TestDeployUndercloud(TestPluginV1):
 
         mock_hc_process.assert_has_calls([
             mock.call(env_path='./inside.yaml'),
-            mock.call(env_path='/twd/templates/abs.yaml'),
-            mock.call(env_path='/twd/templates/puppet/foo.yaml'),
-            mock.call(env_path='/twd/templates/environments/myenv.yaml'),
+            mock.call(env_path='/tmp/thtroot/abs.yaml'),
+            mock.call(env_path='/tmp/thtroot/puppet/foo.yaml'),
+            mock.call(env_path='/tmp/thtroot/environments/myenv.yaml'),
             mock.call(env_path='/tmp/thtroot42/notouch.yaml'),
             mock.call(env_path='../outside.yaml')])
 
@@ -212,11 +212,11 @@ class TestDeployUndercloud(TestPluginV1):
                                          '--templates', '/tmp/thtroot'], [])
 
         rewritten_env = {'resource_registry': {
-            'OS::Foo::Bar': '/twd/outside.yaml',
-            'OS::Foo::Baz': '/twd/templates/inside.yaml',
-            'OS::Foo::Qux': '/twd/templates/abs.yaml',
+            'OS::Foo::Bar': '/tmp/outside.yaml',
+            'OS::Foo::Baz': '/tmp/thtroot/inside.yaml',
+            'OS::Foo::Qux': '/tmp/thtroot/abs.yaml',
             'OS::Foo::Quux': '/tmp/thtroot42/notouch.yaml',
-            'OS::Foo::Corge': '/twd/templates/puppet/foo.yaml'
+            'OS::Foo::Corge': '/tmp/thtroot/puppet/foo.yaml'
             }
         }
         myenv = {'resource_registry': {
@@ -281,11 +281,11 @@ class TestDeployUndercloud(TestPluginV1):
                                          '-e', 'something.yaml',
                                          '-e', '../../../outside.yaml'], [])
         expected_env = [
-            '/twd/templates/overcloud-resource-registry-puppet.yaml',
+            '/my/templates/overcloud-resource-registry-puppet.yaml',
             mock.ANY,
-            '/twd/templates/environments/undercloud.yaml',
-            '/twd/templates/environments/config-download-environment.yaml',
-            '/twd/templates/environments/deployed-server-noop-ctlplane.yaml',
+            '/my/templates/environments/undercloud.yaml',
+            '/my/templates/environments/config-download-environment.yaml',
+            '/my/templates/environments/deployed-server-noop-ctlplane.yaml',
             '/tmp/thtroot/puppet/foo.yaml',
             '/tmp/thtroot//docker/bar.yaml',
             '/tmp/thtroot42/notouch.yaml',
