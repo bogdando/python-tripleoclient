@@ -60,11 +60,9 @@ class TestUndercloudInstall(TestPluginV1):
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_install_with_heat_custom_output(self, mock_subprocess,
-                                                        mock_cwd, mock_wr,
-                                                        mock_os):
+                                                        mock_wr, mock_os):
         self.conf.config(output_dir='/foo')
         self.conf.config(roles_file='foo/roles.yaml')
         arglist = ['--use-heat', '--no-validations']
@@ -115,7 +113,7 @@ class TestUndercloudInstall(TestPluginV1):
              '--cleanup', '-e',
              '/foo/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--log-file=/tmp/install-undercloud.log'])
+             '--log-file=install-undercloud.log'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
@@ -129,10 +127,9 @@ class TestUndercloudInstall(TestPluginV1):
                 '_get_unknown_instack_tags', return_value=None, autospec=True)
     @mock.patch('jinja2.meta.find_undeclared_variables', return_value={},
                 autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_install_with_heat_net_conf_over(self, mock_subprocess,
-                                                        mock_cwd, mock_j2_meta,
+                                                        mock_j2_meta,
                                                         mock_get_unknown_tags,
                                                         mock_get_j2,
                                                         mock_sroutes,
@@ -275,15 +272,14 @@ class TestUndercloudInstall(TestPluginV1):
              '--cleanup', '-e',
              '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--log-file=/tmp/install-undercloud.log'])
+             '--log-file=install-undercloud.log'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_install_with_heat_and_debug(self, mock_subprocess,
-                                                    mock_cwd, mock_wr,
-                                                    mock_os):
+                                                    mock_wr, mock_os):
+        self.conf.config(undercloud_log_file='/foo/bar')
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -333,15 +329,13 @@ class TestUndercloudInstall(TestPluginV1):
              '--output-dir=/home/stack', '--cleanup',
              '-e', '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--debug', '--log-file=/tmp/install-undercloud.log'])
+             '--debug', '--log-file=/foo/bar'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_install_with_swift_encryption(self, mock_subprocess,
-                                                      mock_cwd, mock_wr,
-                                                      mock_os):
+                                                      mock_wr, mock_os):
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         self.conf.set_default('enable_swift_encryption', True)
@@ -393,7 +387,7 @@ class TestUndercloudInstall(TestPluginV1):
              '--output-dir=/home/stack', '--cleanup',
              '-e', '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--log-file=/tmp/install-undercloud.log'])
+             '--log-file=install-undercloud.log'])
 
 
 class TestUndercloudUpgrade(TestPluginV1):
@@ -432,10 +426,9 @@ class TestUndercloudUpgrade(TestPluginV1):
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_upgrade_with_heat(self, mock_subprocess,
-                                          mock_cwd, mock_wr, mock_os):
+                                          mock_wr, mock_os):
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -485,14 +478,13 @@ class TestUndercloudUpgrade(TestPluginV1):
              '--output-dir=/home/stack', '--cleanup',
              '-e', '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--log-file=/tmp/install-undercloud.log'])
+             '--log-file=install-undercloud.log'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_upgrade_with_heat_and_yes(self, mock_subprocess,
-                                                  mock_cwd, mock_wr, mock_os):
+                                                  mock_wr, mock_os):
         arglist = ['--use-heat', '--no-validations', '-y']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -542,15 +534,13 @@ class TestUndercloudUpgrade(TestPluginV1):
              '--output-dir=/home/stack', '--cleanup',
              '-e', '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--log-file=/tmp/install-undercloud.log'])
+             '--log-file=install-undercloud.log'])
 
     @mock.patch('os.mkdir')
     @mock.patch('tripleoclient.utils.write_env_file', autospec=True)
-    @mock.patch('os.getcwd', return_value='/tmp')
     @mock.patch('subprocess.check_call', autospec=True)
     def test_undercloud_upgrade_with_heat_and_debug(self, mock_subprocess,
-                                                    mock_cwd, mock_wr,
-                                                    mock_os):
+                                                    mock_wr, mock_os):
         arglist = ['--use-heat', '--no-validations']
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -603,4 +593,4 @@ class TestUndercloudUpgrade(TestPluginV1):
              '--output-dir=/home/stack', '--cleanup',
              '-e', '/home/stack/tripleo-config-generated-env-files/'
              'undercloud_parameters.yaml',
-             '--debug', '--log-file=/tmp/install-undercloud.log'])
+             '--debug', '--log-file=install-undercloud.log'])
