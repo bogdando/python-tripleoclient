@@ -23,7 +23,11 @@ extensions = [
     'sphinx.ext.autodoc',
     'openstackdocstheme',
     'cliff.sphinxext',
+    'sphinxcontrib.rsvgconverter',
 ]
+
+# Disable usage of xindy https://bugzilla.redhat.com/show_bug.cgi?id=1643664
+latex_use_xindy = False
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
